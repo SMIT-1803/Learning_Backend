@@ -1,12 +1,17 @@
 import mongoose from "mongoose";
 import { DB_NAME } from "../constants.js";
+import { app } from "../app.js";
 
-// This is the second way of connecting a database, which is more preferrable because is makes the code more modular. Now storing the connnection instance of mongoDB is just done here for information purposes. Also we did not bring express here because at this moment we just want to connect the database and learn the best practices.
+// This is the second way of connecting a database, which is more preferrable because is makes the code more modular. Now storing the connnection instance of mongoDB is just done here for information purposes.
 const connectDB = async () => {
   try {
     const connectionInstance = await mongoose.connect(
       `${process.env.MONGODB_URI}/${DB_NAME}`
     );
+    app.on("error", (error) => {
+      console.log("ERROR: ", error);
+      throw error;
+    });
     console.log(
       `\n MongoDB connected !! DB Host: ${connectionInstance.connection.host}`
     );

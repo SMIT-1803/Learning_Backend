@@ -1,11 +1,30 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
+import { app } from "./app.js";
 
 dotenv.config({
   path: "./env",
 });
 
-connectDB();
+connectDB() // Because connectDB is a async function, when it ends it returns a promise, which can be used if wanted to.
+.then(()=>{
+    app.listen(process.env.PORT || 8000,()=>{
+        console.log(`Server is running at port: ${process.env.PORT}`)
+    })
+})
+.catch((err)=>{
+    console.log("MONGO DB connection Failed ", err)
+})
+
+
+
+
+
+
+
+
+
+
 
 /*
 import mongoose from "mongoose";
