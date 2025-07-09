@@ -10,8 +10,8 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.json({ limit: "16kb" })); // This is limit the amount of data we get in the form of JSON from user, like from a form
+app.use(express.urlencoded({ extended: true, limit: "16kb" })); // This is for us to be able to get data from the URL, while limiting it too
 app.use(express.static("public"));
-app.use(cookieParser());
+app.use(cookieParser()); 
 export { app };
