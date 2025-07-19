@@ -19,8 +19,8 @@ const registerUser = asyncHandler(async (req, res) => {
   // -----------------------------------------
 
   // Getting user data
+  console.log("This is the req.body data: ", req.body);
   const { username, fullName, email, password } = req.body;
-  console.log("email: ", email);
 
   // Validation
   if (
@@ -28,12 +28,12 @@ const registerUser = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(400, "All fields are required!!");
   }
-  if (!email.includes("@") || email !== email.toLowercase()) {
+  if (!email.includes("@") || email !== email.toLowerCase()) {
     throw new ApiError(400, "Please enter a valid Email");
   }
 
   //If user Exists
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
@@ -42,8 +42,16 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // Taking files like Avatar(Compulsory) and CoverImage
+  console.log("This is the req.files data: ", req.files);
   const avatarLocalPath = req.files?.avatar[0]?.path; // In these two lines we are getting the local file path, which is on our server.
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  let coverImageLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
 
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar is required!!");
@@ -59,7 +67,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //Creating User object to make database entry
   const user = await User.create({
     fullName,
-    username: username.toLowercase(),
+    username: username.toLowerCase(),
     password,
     email,
     avatar: avatar.url,
@@ -82,19 +90,6 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 export { registerUser };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // second way for registerUser function without using asyncHandler as it is optional to use and create for a project
 
