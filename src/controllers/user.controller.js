@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteImage } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -88,8 +88,8 @@ const registerUser = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
     password,
     email,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
+    avatar: {url:avatar.url,public_id:avatar.public_id},
+    coverImage: {url:coverImage.url,public_id:coverImage.public_id}||{url:"",public_id:''},
   });
 
   // Removing password and refreshToken from the response. Also smartly checking if the user got created or not.
@@ -310,7 +310,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path; // This is different from taking avatar image while registering because when we were registering we were taking both the AVATAR and COVERIMAGE together which is why we where using 'req/files' but here because this function is only to change the avatar we are using 'req.file'. The same goes for updateUserCoverImage function.
-
+  const oldAvatar = await User.findById(req.user?._id).avatar.public_id;
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is missing");
   }
@@ -323,13 +323,15 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     req.user?._id,
     {
       $set: {
-        avatar: avatar.url,
+        avatar: { url: avatar.url, public_id: avatar.public_id },
       },
     },
     {
       new: true,
     }
   ).select("-password");
+
+  await deleteImage(oldAvatar)
 
   return res
     .status(200)
@@ -338,7 +340,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
-
+  const oldCoverImage = await User.findById(req.user?._id).coverImage.public_id;
   if (!coverImageLocalPath) {
     throw new ApiError(400, "Cover image file is missing");
   }
@@ -351,14 +353,14 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     req.user?._id,
     {
       $set: {
-        coverImage: coverImage.url,
+        coverImage: { url: coverImage.url, public_id: coverImage.public_id }
       },
     },
     {
       new: true,
     }
   ).select("-password");
-
+  await deleteImage(oldCoverImage)
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Cover image updated successfully"));
